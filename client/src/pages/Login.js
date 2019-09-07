@@ -21,6 +21,7 @@ const LoginPage = ({ history }) => {
     API.post("/api/user/login", { username, password })
       .then(res => {
         if (res.data.success) {
+          document.cookie = `token=${res.data.token}`;
           localStorage.setItem("token", res.data.token);
           setIsLogin(true);
           history.push("/");
