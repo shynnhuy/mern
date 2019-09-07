@@ -12,9 +12,11 @@ const connection = require('../mysql');
 
 const authentication = require('../authentication');
 
+const adminAuthorization = require('../AdminAuthorization');
+
 dotenv.config({ path: '../config.env' });
 
-router.get('/', (req, res) => {
+router.get('/', adminAuthorization, (req, res) => {
   const query = 'SELECT * FROM user';
   connection.query(query, (err, results) => {
     if (err) {
@@ -78,7 +80,11 @@ router.post('/login', (req, res) => {
         bcrypt.compare(password, result[0].password).then((isMatch) => {
           if (isMatch) {
             const token = jwt.sign(
-              { id: result[0].id, username: result[0].username },
+              {
+                id: result[0].id,
+                username: result[0].username,
+                role: result[0].role,
+              },
               process.env.JWT_SECRET,
             );
             return res.status(200).json({
