@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
 
 module.exports = (req, res, next) => {
-  const token = req.headers.Authorization;
+  const token = req.headers.authorization;
   if (token) {
     jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
       if (err) {
@@ -11,7 +11,7 @@ module.exports = (req, res, next) => {
         });
       }
       req.userData = decoded;
-      next();
+      return next();
     });
   } else {
     return res.json({
@@ -19,4 +19,5 @@ module.exports = (req, res, next) => {
       message: 'Auth token is not supplied',
     });
   }
+  return 0;
 };
