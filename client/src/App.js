@@ -1,5 +1,5 @@
 import React from "react";
-import "./App.scss";
+import "./assets/style/main.scss";
 import { Container } from "reactstrap";
 import { Switch, Route } from "react-router-dom";
 
