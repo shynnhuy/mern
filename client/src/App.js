@@ -6,6 +6,7 @@ import { Switch, Route } from "react-router-dom";
 import AppNavBar from "./Components/AppNavBar";
 import LoginPage from "./pages/Login";
 import { UserProvider } from "./Contexts/UserContext";
+import HomePage from "./pages/Home";
 
 const App = () => {
   return (
@@ -13,8 +14,8 @@ const App = () => {
       <div>
         <Route component={AppNavBar} />
         <Container>
-          <h1>Hello World</h1>
           <Switch>
+            <Route path="/" exact component={HomePage} />
             <Route path="/login" component={LoginPage} />
           </Switch>
         </Container>
