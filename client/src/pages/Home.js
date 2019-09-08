@@ -21,6 +21,7 @@ const HomePage = () => {
         </Col>
         <Col xs={12} md={3}>
           <h1>SideBar</h1>
+          <p>KyOcCho</p>
         </Col>
       </Row>
     </div>
