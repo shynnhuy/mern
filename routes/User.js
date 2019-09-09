@@ -1,104 +1,33 @@
-const express = require('express');
-
-const router = express.Router();
-
-const dotenv = require('dotenv');
-
+const router = require('express').Router();
+const User = require('../models/User');
 const bcrypt = require('bcryptjs');
+const { loginValidation, registerValidation } = require('../validation');
 
-const jwt = require('jsonwebtoken');
+router.post('/register', async (req,res) => {
 
-const connection = require('../mysql');
+    const { username, password, email } = req.body;
 
-const authentication = require('../authentication');
+    const { error } = registerValidation(req.body)
+    if(error) return res.status(400).send(error.details[0].message)
 
-const adminAuthorization = require('../AdminAuthorization');
+    const existUsername = await User.findOne({ username });
+    if(existUsername) return res.status(401).send('Username already exists')
 
-dotenv.config({ path: '../config.env' });
+    const salt = await bcrypt.genSalt(8);
+    const hashPass = await bcrypt.hash(password, salt)
 
-router.get('/', adminAuthorization, (req, res) => {
-  const query = 'SELECT * FROM user';
-  connection.query(query, (err, results) => {
-    if (err) {
-      return res.status(403).json({ err });
+    const user = new User({
+        username,
+        password: hashPass,
+        email
+    })
+
+    try {
+        const saveUser = await user.save();
+        return res.send(saveUser)
+    } catch (error) {
+        return res.status(400).send(error)
     }
-    if (!err) {
-      return res.status(200).json({
-        message: 'Success',
-        data: results,
-      });
-    }
-  });
-});
-
-router.get('/:username', authentication, (req, res) => {
-  const query = `SELECT * FROM user WHERE user.username = '${req.params.username}'`;
-  connection.query(query, (err, result) => {
-    if (err) {
-      return res.status(403).json({ err });
-    }
-    if (!err) {
-      return res.status(200).json({
-        message: 'Success',
-        data: result,
-      });
-    }
-  });
-});
-
-router.post('/register', (req, res) => {
-  const { username, password, email } = req.body;
-  const query = 'INSERT INTO user (username, password, email) VALUES (?, ?, ?)';
-  bcrypt.genSalt(10, (errSalt, salt) => {
-    bcrypt.hash(password, salt, (errHash, hash) => {
-      if (!errHash) {
-        connection.query(query, [username, hash, email], (err, result) => {
-          if (err) {
-            return res.status(403).json({ err });
-          }
-          if (!err) {
-            return res.status(200).json({
-              message: 'Success',
-              data: result,
-            });
-          }
-        });
-      }
-    });
-  });
-});
-
-router.post('/login', (req, res) => {
-  const { username, password } = req.body;
-  const query = 'SELECT * FROM user WHERE user.username = ?';
-  connection.query(query, [username], (err, result) => {
-    if (err) {
-      return res.status(403).json({ err });
-    }
-    if (!err) {
-      if (result.length) {
-        bcrypt.compare(password, result[0].password).then((isMatch) => {
-          if (isMatch) {
-            const user = {
-              id: result[0].id,
-              username: result[0].username,
-              role: result[0].role,
-            };
-            const token = jwt.sign(user, process.env.JWT_SECRET, {
-              expiresIn: 60 * 60 * 24,
-            });
-            return res.status(200).json({
-              success: true,
-              token,
-            });
-          }
-        });
-      } else {
-        return res.send('Error');
-      }
-      return 0;
-    }
-  });
-});
+})
 
 module.exports = router;
